@@ -113,7 +113,7 @@ html, body { background: #0f1f3d; color: #e8edf5; font-family: 'Barlow', sans-se
     <div class="kpi k1"><div class="klbl">Total Coached Events</div><div class="kval" id="kT">--</div><div class="ksub" id="kpiDateRange">All Time</div></div>
     <div class="kpi k2"><div class="klbl">Viewed</div><div class="kval" id="kU" style="font-size:44px;">--</div><div class="ksub" id="kVR">viewing rate</div></div>
     <div class="kpi k3"><div class="klbl">Avg Events / Driver</div><div class="kval" id="kA">--</div><div class="ksub" id="kAS">active drivers</div></div>
-    <div class="kpi k4"><div class="klbl">Most Common Event</div><div class="kval" id="kMC" style="font-size:28px;padding-top:6px;line-height:1.2;">--</div><div class="ksub" id="kMT">--</div></div>
+    <div class="kpi k4"><div class="klbl">Avg Events / Week</div><div class="kval" id="kMC">--</div><div class="ksub" id="kMT">this period</div></div>
   </div>
 
 
@@ -129,7 +129,7 @@ html, body { background: #0f1f3d; color: #e8edf5; font-family: 'Barlow', sans-se
 
   <div class="charts-row">
     <div class="card"><div class="ctitle">Events Over Time (Weekly)</div><div id="barWrap"></div></div>
-    <div class="card"><div class="ctitle">Events by Type</div><div id="donutWrap"></div></div>
+    <div class="card"><div class="ctitle">Big 3</div><div id="big3LogoWrap" style="text-align:center;margin-bottom:8px;"><img id="big3Logo" src="" style="height:54px;object-fit:contain;display:none;opacity:0.85;filter:brightness(1.1);" alt="Big 3"/></div><div id="donutWrap"></div></div>
   </div>
 
   <div class="bottom-row">
@@ -309,6 +309,34 @@ function drawBar(id,labels,vals){
   document.getElementById(id).innerHTML=tag('svg',attr('viewBox','0 0 '+W+' '+H)+attr('xmlns','http://www.w3.org/2000/svg')+attr('style','width:100%;display:block;'),out);
 }
 
+function drawBig3(id,tkeys,tct,total){
+  var top3=tkeys.slice(0,3);
+  var medals=['1ST','2ND','3RD'];
+  var mColors=['#e8a020','#7a94b4','#c87941'];
+  var html='<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">';
+  for(var i=0;i<top3.length;i++){
+    var t=top3[i];
+    var cnt=tct[t];
+    var pct=total>0?Math.round(cnt/total*100):0;
+    var barW=Math.max(4,pct);
+    html+='<div style="display:flex;align-items:center;gap:10px;">'
+      +'<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:'+mColors[i]+';width:26px;text-align:center;flex-shrink:0;">'+medals[i]+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">'
+          +'<span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#e8edf5;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72%;">'+getLabel(t)+'</span>'
+          +'<span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:'+mColors[i]+';">'+pct+'%</span>'
+        +'</div>'
+        +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">'
+          +'<div style="height:100%;width:'+barW+'%;background:'+mColors[i]+';border-radius:3px;transition:width .4s;"></div>'
+        +'</div>'
+        +'<div style="font-size:9px;color:#7a94b4;margin-top:2px;">'+cnt+' events</div>'
+      +'</div>'
+    +'</div>';
+  }
+  html+='</div>';
+  document.getElementById(id).innerHTML=html;
+}
+
 function drawDonut(id,labels,vals,colors){
   var total=0;
   for(var i=0;i<vals.length;i++)total+=vals[i];
@@ -385,12 +413,7 @@ function render(evts){
   document.getElementById('kA').textContent=avg;
   document.getElementById('kAS').innerHTML='<b>'+dc+'</b> drivers coached';
 
-  // KPI 4 — event name big, count sub (matches reference layout)
-  if(topType){
-    document.getElementById('kMC').style.cssText='font-size:28px;padding-top:6px;line-height:1.2;';
-    document.getElementById('kMC').textContent=getLabel(topType);
-    document.getElementById('kMT').innerHTML='<b>'+topCount+'</b> events';
-  }
+  // KPI 4 — avg events per week (computed after wkeys is built below)
 
   // Bar chart by 7-day bucket, anchored to the window start so labels
   // exactly match the 28-day window (4 weekly buckets, e.g. 04/16, 04/23, 04/30, 05/07
@@ -433,8 +456,15 @@ function render(evts){
   }
   drawBar('barWrap',wkeys,wkeys.map(function(k){return wk[k];}));
 
+  // KPI 4 — avg events per week
+  var numWeeks = wkeys.length || 1;
+  var avgWkVal = (evts.length / numWeeks).toFixed(1);
+  document.getElementById('kMC').style.cssText = '';
+  document.getElementById('kMC').textContent = avgWkVal;
+  document.getElementById('kMT').innerHTML = '<b>'+numWeeks+'</b> week'+(numWeeks===1?'':'s');
+
   var tkeys=Object.keys(tct).sort(function(a,b){return tct[b]-tct[a];});
-  drawDonut('donutWrap',tkeys.map(function(t){return getLabel(t);}),tkeys.map(function(t){return tct[t];}),tkeys.map(function(t){return getColor(t);}));
+  drawBig3('donutWrap',tkeys,tct,evts.length);
 
   // Driver table — matches reference layout: Driver / Total / Viewed columns
   var dd={};
@@ -770,7 +800,8 @@ document.getElementById('clearBtn').addEventListener('click', function() {
   document.getElementById('kA').textContent = '--';
   document.getElementById('kAS').textContent = 'drivers coached';
   document.getElementById('kMC').textContent = '--';
-  document.getElementById('kMT').textContent = '--';
+  document.getElementById('kMC').style.cssText = '';
+  document.getElementById('kMT').textContent = 'this period';
   document.getElementById('barWrap').innerHTML = '';
   document.getElementById('donutWrap').innerHTML = '';
   document.getElementById('drvWrap').innerHTML = '<p style="text-align:center;padding:24px;color:#7a94b4;font-size:12px;">Import a file to see data</p>';
