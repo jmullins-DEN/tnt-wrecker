@@ -349,7 +349,7 @@ function fetchAndInit(){
 }
 
 
-function switchTab(tab){var isDash=tab==='dashboard';document.getElementById('mainView').style.display=isDash?'':'none';document.getElementById('driverView').style.display='none';document.getElementById('distributionView').style.display=isDash?'none':'';document.getElementById('tabDashboard').classList.toggle('active',isDash);document.getElementById('tabDistribution').classList.toggle('active',!isDash);}
+function switchTab(tab){var isDash=tab==='dashboard';document.getElementById('mainView').style.display=isDash?'':'none';document.getElementById('driverView').style.display='none';document.getElementById('distributionView').style.display=isDash?'none':'';document.getElementById('tabDashboard').classList.toggle('active',isDash);document.getElementById('tabDistribution').classList.toggle('active',!isDash);if(!isDash){distFetchFromGitHub();}}
 var GH_OWNER='jmullins-DEN';var GH_TOKEN_KEY='github_pat_token';var DIST_CACHE_KEY=STORAGE_KEY+'_distribution';
 var DEFAULT_DIST=['jstanley@synergy-solutionsllc.com','mason.duncan@fioreandsons.com','jason.stroud@fioreandsons.com','aboyer@fioreandsons.com'];
 function ghToken(){return localStorage.getItem(GH_TOKEN_KEY)||'';}
