@@ -366,7 +366,7 @@ function distRemove(idx){var emails=distCurrentEmails();emails.splice(idx,1);dis
 function distSaveToGitHub(){var emails=distCurrentEmails();var statusEl=document.getElementById('distStatus');statusEl.textContent='Saving...';fetch('https://den-distribution.jmullins-af4.workers.dev?repo=tnt-wrecker',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipients:emails})}).then(function(r){return r.json();}).then(function(res){if(res.ok){statusEl.textContent='Saved to GitHub';statusEl.style.color='#3db87a';var msg=document.getElementById('distSavedMsg');msg.textContent='Saved';msg.style.opacity='1';setTimeout(function(){msg.style.opacity='0';statusEl.style.color='';},3000);}else{statusEl.textContent='Save failed: '+(res.error||'unknown');statusEl.style.color='#e05252';}}).catch(function(e){statusEl.textContent='Save failed: '+e;statusEl.style.color='#e05252';});}
 
 try{localStorage.removeItem(DIST_CACHE_KEY);}catch(e){}
-distFetchFromGitHub();
+setTimeout(function(){distFetchFromGitHub();},500);
 
 try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
 fetchAndInit();
