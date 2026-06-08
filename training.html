@@ -106,7 +106,7 @@ tr.driver-row:hover td{background:rgba(232,160,32,0.08);}
   </div>
   <button class="print-btn" onclick="window.print()">&#128438; Print</button>
 </header>
-<nav class="tab-nav"><button class="tab-btn active" id="tabDashboard" onclick="switchTab('dashboard')">Dashboard</button><button class="tab-btn" id="tabDistribution" onclick="switchTab('distribution')">Distribution</button></nav><div class="page" id="distributionView" style="display:none;"><div class="dist-card"><div class="ctitle">Email Distribution List</div><p style="font-size:12px;color:#7a94b4;margin-bottom:10px;">Recipients stored in GitHub. Requires a GitHub token with <b style="color:#e8a020;">repo</b> scope to save.</p><div style="font-size:11px;color:#7a94b4;margin-bottom:12px;min-height:16px;" id="distStatus">Loading from GitHub...</div><div class="dist-input-row"><input class="dist-input" id="distEmailInput" type="email" placeholder="Add email address..." onkeydown="if(event.key==='Enter')distAddEmail()"/><button class="dist-add-btn" onclick="distAddEmail()">+ Add</button></div><div class="dist-err" id="distErr">Please enter a valid email address.</div><ul class="dist-list" id="distList"></ul><div class="dist-save-row"><button class="dist-save-btn" onclick="distSaveToGitHub()">Save to GitHub</button><span class="dist-saved-msg" id="distSavedMsg"></span></div></div></div>
+<nav class="tab-nav"><button class="tab-btn active" id="tabDashboard" onclick="switchTab('dashboard')">Dashboard</button><button class="tab-btn" id="tabDistribution" onclick="switchTab('distribution')">Distribution</button></nav><div class="page" id="distributionView" style="display:none;"><div class="dist-card"><div class="ctitle">Email Distribution List</div><p style="font-size:12px;color:#7a94b4;margin-bottom:10px;">Recipients stored in GitHub. Changes save automatically.</p><div style="font-size:11px;color:#7a94b4;margin-bottom:12px;min-height:16px;" id="distStatus">Loading from GitHub...</div><div class="dist-input-row"><input class="dist-input" id="distEmailInput" type="email" placeholder="Add email address..." onkeydown="if(event.key==='Enter')distAddEmail()"/><button class="dist-add-btn" onclick="distAddEmail()">+ Add</button></div><div class="dist-err" id="distErr">Please enter a valid email address.</div><ul class="dist-list" id="distList"></ul><div class="dist-save-row"><button class="dist-save-btn" onclick="distSaveToGitHub()">Save to GitHub</button><span class="dist-saved-msg" id="distSavedMsg"></span></div></div></div>
 <div class="page" id="mainView">
   <div class="kpis">
     <div class="kpi k1"><div class="klbl">Total Drivers Trained</div><div class="kval" id="kDrivers">--</div></div>
@@ -368,6 +368,7 @@ function distSaveToGitHub(){var emails=distCurrentEmails();var statusEl=document
 try{localStorage.removeItem(DIST_CACHE_KEY);}catch(e){}
 distFetchFromGitHub();
 
+try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
 fetchAndInit();
 
 </script>
