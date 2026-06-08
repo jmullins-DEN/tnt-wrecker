@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Fiore & Sons — Driver Training Dashboard</title>
+<title>TNT Wrecker Service — Driver Training Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -349,26 +349,22 @@ function fetchAndInit(){
 }
 
 
-function switchTab(tab){var isDash=tab==='dashboard';document.getElementById('mainView').style.display=isDash?'':'none';document.getElementById('driverView').style.display='none';document.getElementById('distributionView').style.display=isDash?'none':'';document.getElementById('tabDashboard').classList.toggle('active',isDash);document.getElementById('tabDistribution').classList.toggle('active',!isDash);if(!isDash){distFetchFromGitHub();}}
+function switchTab(tab){var isDash=tab==='dashboard';document.getElementById('mainView').style.display=isDash?'':'none';document.getElementById('driverView').style.display='none';document.getElementById('distributionView').style.display=isDash?'none':'';document.getElementById('tabDashboard').classList.toggle('active',isDash);document.getElementById('tabDistribution').classList.toggle('active',!isDash);}
 var GH_OWNER='jmullins-DEN';var GH_TOKEN_KEY='github_pat_token';var DIST_CACHE_KEY=STORAGE_KEY+'_distribution';
-var DEFAULT_DIST=['jstanley@synergy-solutionsllc.com','mason.duncan@fioreandsons.com','jason.stroud@fioreandsons.com','aboyer@fioreandsons.com'];
+var DEFAULT_DIST=[];
 function ghToken(){return localStorage.getItem(GH_TOKEN_KEY)||'';}
 function distCacheLoad(){try{var r=localStorage.getItem(DIST_CACHE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
 function distCacheSave(e){try{localStorage.setItem(DIST_CACHE_KEY,JSON.stringify(e));}catch(e){}}
-var _distList=[];
-function distFetchFromGitHub(){fetch('https://den-distribution.jmullins-af4.workers.dev?repo=tnt-wrecker').then(function(r){return r.ok?r.json():Promise.reject(r.status);}).then(function(d){_distList=Array.isArray(d.recipients)?d.recipients.slice():[];distRender();document.getElementById('distStatus').textContent='Loaded from GitHub';}).catch(function(){_distList=[];distRender();document.getElementById('distStatus').textContent='Could not load distribution list.';});}
-function distCurrentEmails(){var items=document.getElementById('distList').querySelectorAll('.dist-email');var emails=[];items.forEach(function(el){emails.push(el.textContent.trim());});return emails.length?emails:DEFAULT_DIST.slice();}
+function distFetchFromGitHub(){fetch('https://den-distribution.jmullins-af4.workers.dev?repo=tnt-wrecker').then(function(r){return r.ok?r.json():Promise.reject(r.status);}).then(function(d){var e=Array.isArray(d.recipients)?d.recipients:DEFAULT_DIST.slice();distCacheSave(e);distRender(e);document.getElementById('distStatus').textContent='Loaded from GitHub';}).catch(function(){var c=distCacheLoad();var e=c&&c.length?c:DEFAULT_DIST.slice();distRender(e);document.getElementById('distStatus').textContent=c?'Using cached list':'Using default list';});}
+function distCurrentEmails(){var c=distCacheLoad();return c&&c.length?c:DEFAULT_DIST.slice();}
 function distRender(emails){var ul=document.getElementById('distList');ul.innerHTML='';if(!emails||!emails.length){ul.innerHTML='<li style="color:#7a94b4;font-size:12px;padding:8px 0;">No recipients yet.</li>';return;}emails.forEach(function(email,idx){var li=document.createElement('li');li.className='dist-item';li.innerHTML='<span class="dist-email">'+escHtml(email)+'</span><button class="dist-remove" onclick="distRemove('+idx+')">Remove</button>';ul.appendChild(li);});}
 function distAddEmail(){var input=document.getElementById('distEmailInput'),val=input.value.trim().toLowerCase(),errEl=document.getElementById('distErr');if(!val||!val.includes('@')||!val.includes('.')){errEl.style.display='block';return;}errEl.style.display='none';var emails=distCurrentEmails();if(emails.map(function(e){return e.toLowerCase();}).indexOf(val)===-1){emails.push(val);distCacheSave(emails);}input.value='';distRender(emails);}
 function distRemove(idx){var emails=distCurrentEmails();emails.splice(idx,1);distCacheSave(emails);distRender(emails);}
 
+function distSaveToGitHub(){var emails=distCurrentEmails();var statusEl=document.getElementById('distStatus');statusEl.textContent='Saving...';fetch('https://den-distribution.jmullins-af4.workers.dev?repo=tnt-wrecker',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipients:emails})}).then(function(r){return r.json();}).then(function(res){if(res.ok){distCacheSave(emails);statusEl.textContent='Saved to GitHub';statusEl.style.color='#3db87a';var msg=document.getElementById('distSavedMsg');msg.textContent='Saved';msg.style.opacity='1';setTimeout(function(){msg.style.opacity='0';statusEl.style.color='';},3000);}else{statusEl.textContent='Save failed: '+(res.error||'unknown');statusEl.style.color='#e05252';}}).catch(function(e){statusEl.textContent='Save failed: '+e;statusEl.style.color='#e05252';});
+}
+distFetchFromGitHub();
 
-function distSaveToGitHub(){var emails=distCurrentEmails();var statusEl=document.getElementById('distStatus');statusEl.textContent='Saving...';fetch('https://den-distribution.jmullins-af4.workers.dev?repo=tnt-wrecker',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipients:emails})}).then(function(r){return r.json();}).then(function(res){if(res.ok){statusEl.textContent='Saved to GitHub';statusEl.style.color='#3db87a';var msg=document.getElementById('distSavedMsg');msg.textContent='Saved';msg.style.opacity='1';setTimeout(function(){msg.style.opacity='0';statusEl.style.color='';},3000);}else{statusEl.textContent='Save failed: '+(res.error||'unknown');statusEl.style.color='#e05252';}}).catch(function(e){statusEl.textContent='Save failed: '+e;statusEl.style.color='#e05252';});}
-
-try{localStorage.removeItem(DIST_CACHE_KEY);}catch(e){}
-setTimeout(function(){distFetchFromGitHub();},500);
-
-try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
 fetchAndInit();
 
 </script>
